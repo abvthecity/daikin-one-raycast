@@ -39,7 +39,7 @@ export const enum TargetHeatingCoolingState {
   HEAT = 1,
   COOL = 2,
   AUTO = 3,
-  AUXILIARY_HEAT = 4
+  AUXILIARY_HEAT = 4,
 }
 
 export const TargetHeatingCoolingStateNames = {
@@ -47,8 +47,8 @@ export const TargetHeatingCoolingStateNames = {
   [TargetHeatingCoolingState.HEAT]: "HEAT",
   [TargetHeatingCoolingState.COOL]: "COOL",
   [TargetHeatingCoolingState.AUTO]: "AUTO",
-  [TargetHeatingCoolingState.AUXILIARY_HEAT]: "AUXILIARY_HEAT"
-}
+  [TargetHeatingCoolingState.AUXILIARY_HEAT]: "AUXILIARY_HEAT",
+};
 
 class DaikinOneAPI {
   private baseUrl = "https://api.daikinskyport.com";
@@ -60,7 +60,7 @@ class DaikinOneAPI {
       const response = await fetch(`${this.baseUrl}/users/auth/login`, {
         method: "POST",
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -73,15 +73,13 @@ class DaikinOneAPI {
         throw new Error("Authentication failed");
       }
 
-      const data = await response.json() as DaikinToken;
+      const data = (await response.json()) as DaikinToken;
       this.token = data;
       this.tokenExpiration = new Date();
-      
+
       // Set expiration a little early (like the homebridge code)
-      const expSeconds = this.tokenExpiration.getSeconds() 
-        + this.token.accessTokenExpiresIn 
-        - (180 * 2); // 180 seconds = 3 minutes early
-      
+      const expSeconds = this.tokenExpiration.getSeconds() + this.token.accessTokenExpiresIn - 180 * 2; // 180 seconds = 3 minutes early
+
       this.tokenExpiration.setSeconds(expSeconds);
       return true;
     } catch (error) {
@@ -98,7 +96,7 @@ class DaikinOneAPI {
     try {
       const response = await fetch(`${this.baseUrl}/devices`, {
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           Authorization: `Bearer ${this.token.accessToken}`,
         },
       });
@@ -107,7 +105,7 @@ class DaikinOneAPI {
         throw new Error("Failed to fetch devices");
       }
 
-      const data = await response.json() as DaikinDevice[];
+      const data = (await response.json()) as DaikinDevice[];
       return data;
     } catch (error) {
       console.error("Error fetching devices:", error);
@@ -123,7 +121,7 @@ class DaikinOneAPI {
     try {
       const response = await fetch(`${this.baseUrl}/deviceData/${deviceId}`, {
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           Authorization: `Bearer ${this.token.accessToken}`,
         },
       });
@@ -132,7 +130,7 @@ class DaikinOneAPI {
         throw new Error("Failed to fetch device data");
       }
 
-      const data = await response.json() as DaikinDeviceData;
+      const data = (await response.json()) as DaikinDeviceData;
       return data;
     } catch (error) {
       console.error("Error fetching device data:", error);
@@ -149,7 +147,7 @@ class DaikinOneAPI {
       const response = await fetch(`${this.baseUrl}/deviceData/${deviceId}`, {
         method: "PUT",
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.token.accessToken}`,
         },
@@ -169,16 +167,19 @@ class DaikinOneAPI {
     }
   }
 
-
-
-  async setTargetTemps(deviceId: string, targetTemp?: number, heatThreshold?: number, coolThreshold?: number): Promise<boolean> {
+  async setTargetTemps(
+    deviceId: string,
+    targetTemp?: number,
+    heatThreshold?: number,
+    coolThreshold?: number,
+  ): Promise<boolean> {
     if (!this.token) {
       throw new Error("Not authenticated");
     }
 
     try {
       const requestedData: Record<string, number> = {};
-      
+
       if (targetTemp !== undefined) {
         // Get current device data to determine which temperature to set
         const deviceData = await this.getDeviceData(deviceId);
@@ -208,7 +209,7 @@ class DaikinOneAPI {
       const response = await fetch(`${this.baseUrl}/deviceData/${deviceId}`, {
         method: "PUT",
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.token.accessToken}`,
         },
@@ -232,7 +233,7 @@ class DaikinOneAPI {
         daikinEmail: string;
         daikinPassword: string;
       }>();
-      
+
       if (preferences.daikinEmail && preferences.daikinPassword) {
         return await this.authenticate(preferences.daikinEmail, preferences.daikinPassword);
       }
